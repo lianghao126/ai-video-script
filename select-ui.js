@@ -3,6 +3,14 @@
 // 保留原生 select 作为表单数据来源，只增强展开菜单的显示与操作。
 (() => {
   let opened = null;
+  let placementFrame = 0;
+  function schedulePlacement() {
+    if (!opened || placementFrame) return;
+    placementFrame = requestAnimationFrame(() => {
+      placementFrame = 0;
+      if (opened) opened.placeMenu();
+    });
+  }
 
   function enhanceSelect(select) {
     const wrapper = document.createElement('div');
@@ -142,8 +150,8 @@
   document.addEventListener('pointerdown', event => {
     if (opened && !opened.wrapper.contains(event.target)) opened.close();
   });
-  window.addEventListener('resize', () => { if (opened) opened.placeMenu(); });
+  window.addEventListener('resize', schedulePlacement, { passive: true });
   document.addEventListener('scroll', event => {
-    if (opened && event.target !== opened.menu) opened.placeMenu();
-  }, true);
+    if (opened && event.target !== opened.menu) schedulePlacement();
+  }, { capture: true, passive: true });
 })();

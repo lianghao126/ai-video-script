@@ -1,6 +1,6 @@
 'use strict';
 
-// 缓存几何位置，统一读取后再更新附近按钮，避免读写交错和无效样式更新。
+// 仅测量视口附近的按钮；滚动时暂停光效，避免跟随滚动重复布局与绘制。
 (() => {
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -13,6 +13,19 @@
   let measuredAt = -Infinity;
   const bounds = new Map();
   const values = new Map();
+  const visible = new Set(targets);
+  const lit = new Set();
+  if (typeof IntersectionObserver !== 'undefined') {
+    visible.clear();
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) visible.add(entry.target);
+        else { visible.delete(entry.target); unlight(entry.target); }
+      });
+      dirty = true;
+    }, { rootMargin: '64px' });
+    targets.forEach(button => observer.observe(button));
+  }
 
   function set(button, name, value) {
     let previous = values.get(button);
@@ -22,25 +35,25 @@
     previous[name] = value;
   }
   function unlight(button) {
-    if (values.get(button)?.['--button-glow'] && values.get(button)['--button-glow'] !== '0') set(button, '--button-glow', '0');
+    if (lit.delete(button)) set(button, '--button-glow', '0');
   }
 
   function clear() {
     point = null;
     cancelAnimationFrame(frame);
     frame = 0;
-    targets.forEach(unlight);
+    lit.forEach(unlight);
   }
   function paint(timestamp) {
     frame = 0;
     if (!point || !finePointer.matches || reducedMotion.matches) return;
     if (dirty || timestamp - measuredAt > 120) {
       // 本阶段只读取位置；不能在循环内夹杂 style 写入。
-      targets.forEach(button => { bounds.set(button, button.getBoundingClientRect()); });
+      visible.forEach(button => { bounds.set(button, button.getBoundingClientRect()); });
       dirty = false;
       measuredAt = timestamp;
     }
-    for (const button of targets) {
+    for (const button of visible) {
       const rect = bounds.get(button);
       if (button.disabled || button.getAttribute('aria-disabled') === 'true' || !rect?.width || !rect.height || rect.bottom < 0 || rect.top > innerHeight) {
         unlight(button);
@@ -51,9 +64,9 @@
       const distance = Math.hypot(dx, dy);
       const strength = Math.pow(Math.max(0, 1 - distance / reach), 1.6);
       if (strength > 0) {
-        set(button, '--button-glow', strength.toFixed(3));
-        set(button, '--button-glow-x', (point.x - rect.left).toFixed(1) + 'px');
-        set(button, '--button-glow-y', (point.y - rect.top).toFixed(1) + 'px');
+        // 固定渐变位置，仅改变透明度，避免鼠标每移动一像素就重绘渐变。
+        lit.add(button);
+        set(button, '--button-glow', (Math.round(strength * 10) / 10).toFixed(1));
       } else unlight(button);
     }
   }
@@ -71,7 +84,7 @@
     if (event.pointerType !== 'mouse') clear();
   }, { passive: true });
   document.addEventListener('pointerleave', clear);
-  document.addEventListener('scroll', () => { invalidate(); schedule(); }, { passive: true, capture: true });
+  document.addEventListener('scroll', () => { invalidate(); clear(); }, { passive: true, capture: true });
   document.addEventListener('focusin', invalidate);
   window.addEventListener('resize', () => { invalidate(); schedule(); }, { passive: true });
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(invalidate).observe(document.body);

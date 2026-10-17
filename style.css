@@ -511,7 +511,7 @@ input:focus, select:focus, textarea:focus { background: #151b24; border-color: #
   .usage-steps > li { padding: 21px; }
 }
 
-/* 深色毛玻璃：主面板使用背景模糊，内部控件用轻透材质保持清晰。 */
+/* 大面板用半透明底色与静态高光呈现玻璃质感；实时模糊留给导航与弹出菜单。 */
 :root {
   --glass-fill: #15181e;
   --glass-edge: rgba(225, 234, 255, .16);
@@ -519,8 +519,12 @@ input:focus, select:focus, textarea:focus { background: #151b24; border-color: #
   --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 16px 44px rgba(0, 0, 0, .24);
 }
 body {
-  background: radial-gradient(ellipse at 85% 8%, rgba(49, 82, 132, .13), transparent 55%), radial-gradient(ellipse at 12% 70%, rgba(119, 136, 167, .06), transparent 52%), var(--bg);
-  background-attachment: fixed;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse at 85% 8%, rgba(49, 82, 132, .13), transparent 55%), radial-gradient(ellipse at 12% 70%, rgba(119, 136, 167, .06), transparent 52%);
+  background-size: 100% 1100px, 100% 1400px;
+  background-position: center top, center 1000px;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
 }
 .hero { background: transparent; }
 .site-header { height: 96px; padding-block: 12px; border: 0; background: transparent; }
@@ -568,8 +572,8 @@ select option { background: #171c25; color: #eff3fa; }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :is(.site-header .nav, .card, .demo-notice, .usage-steps > li, .showcase-window, .showcase-float) {
     --glass-fill: rgba(19, 23, 31, .64);
-    -webkit-backdrop-filter: blur(10px) saturate(130%);
-    backdrop-filter: blur(10px) saturate(130%);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   .site-header .nav { background-color: rgba(20, 23, 29, .72); }
   /* 倾斜示意图仅保留透光与高光，避免三维变换叠加模糊造成合成边缘。 */
@@ -580,7 +584,7 @@ select option { background: #171c25; color: #eff3fa; }
   html { scroll-padding-top: 150px; }
   .site-header { height: auto; padding-block: 10px; }
   .site-header .nav { padding: 12px 16px; border-radius: 22px; }
-  :is(.site-header .nav, .card, .demo-notice, .usage-steps > li) { -webkit-backdrop-filter: blur(8px) saturate(130%); backdrop-filter: blur(8px) saturate(130%); }
+  :is(.site-header .nav, .card, .demo-notice, .usage-steps > li) { -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 @media (prefers-reduced-transparency: reduce) {
   :is(.site-header .nav, .card, .demo-notice, .usage-steps > li, .showcase-window, .showcase-float) { background-color: #171b23; -webkit-backdrop-filter: none; backdrop-filter: none; }
@@ -622,8 +626,8 @@ html { scroll-padding-top: 128px; }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .site-header::before {
     background: linear-gradient(to bottom, rgba(8,8,8,.55), rgba(8,8,8,.4) 65%, rgba(8,8,8,0));
-    -webkit-backdrop-filter: blur(18px) saturate(110%);
-    backdrop-filter: blur(18px) saturate(110%);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
 }
 @media (max-width: 600px) {
@@ -703,7 +707,7 @@ html { scroll-padding-top: 128px; }
   border-radius: inherit;
   pointer-events: none;
   opacity: var(--button-glow, 0);
-  background: radial-gradient(120px circle at var(--button-glow-x, 50%) var(--button-glow-y, 50%), rgba(142,156,255,.16), transparent 75%);
+  background: radial-gradient(120px circle at 50% 50%, rgba(142,156,255,.16), transparent 75%);
   box-shadow: inset 0 0 0 1px rgba(154,169,255,.48), 0 0 0 4px rgba(113,132,246,.045), 0 0 26px rgba(114,135,255,.24);
   transition: opacity .18s ease;
 }

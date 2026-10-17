@@ -210,6 +210,7 @@ if (typeof document !== 'undefined') {
   let historyId = null;
   let historyTimer = null;
   let tableFitFrame = 0;
+  let tableFitObserver = null;
 
   function saveHistory() {
     clearTimeout(historyTimer);
@@ -271,12 +272,16 @@ if (typeof document !== 'undefined') {
   }
   function renderTable() {
     cancelAnimationFrame(tableFitFrame);
+    tableFitFrame = 0;
+    tableFitObserver?.disconnect();
     const body = byId('storyboard-rows');
     const fragment = document.createDocumentFragment();
     const areas = [];
+    const rows = [];
     const fields = [['visual', '画面'], ['voice', '旁白或口播'], ['subtitle', '字幕'], ['editing', '剪辑说明']];
     for (const shot of currentResult.shots) {
       const row = document.createElement('tr');
+      rows.push(row);
       const heading = document.createElement('th');
       heading.scope = 'row';
       for (const [className, text] of [['shot-number', `镜头 ${String(shot.index).padStart(2, '0')}`], ['shot-time', `${ScriptEngine.clock(shot.start)}—${ScriptEngine.clock(shot.end)}`], ['shot-duration', `${shot.duration} 秒`], ['shot-purpose', `${shot.phase} · ${shot.purpose}`]]) {
@@ -314,7 +319,27 @@ if (typeof document !== 'undefined') {
     byId('script-notes').textContent = currentResult.notes;
     byId('table-scroll').scrollTop = 0;
     byId('table-scroll').scrollLeft = 0;
-    tableFitFrame = requestAnimationFrame(() => { tableFitFrame = 0; fitCells(areas); });
+    if (typeof IntersectionObserver === 'undefined') {
+      tableFitFrame = requestAnimationFrame(() => { tableFitFrame = 0; fitCells(areas); });
+    } else {
+      // 所有文本仍在表格中；只为即将看到的行测量高度，长脚本不再一次测量上千个输入框。
+      const pending = new Set();
+      tableFitObserver = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          pending.add(entry.target);
+          tableFitObserver.unobserve(entry.target);
+        }
+        if (!pending.size || tableFitFrame) return;
+        tableFitFrame = requestAnimationFrame(() => {
+          tableFitFrame = 0;
+          const visibleAreas = Array.from(pending).flatMap(row => Array.from(row.querySelectorAll('.table-editor')));
+          pending.clear();
+          fitCells(visibleAreas);
+        });
+      }, { root: byId('table-scroll'), rootMargin: '240px 0px' });
+      rows.forEach(row => tableFitObserver.observe(row));
+    }
   }
   function generate(regenerate = false) {
     const data = readForm();
