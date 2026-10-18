@@ -211,6 +211,54 @@ if (typeof document !== 'undefined') {
   let historyTimer = null;
   let tableFitFrame = 0;
   let tableFitObserver = null;
+  let isGenerating = false;
+  let generationTimer = null;
+  let retryRegenerate = false;
+  const disabledBeforeGeneration = new Map();
+
+  function setGenerating(busy) {
+    isGenerating = busy;
+    form.setAttribute('aria-busy', String(busy));
+    byId('table-scroll').setAttribute('aria-busy', String(busy));
+    byId('generate-label').textContent = busy ? '模拟生成中…' : '生成分镜脚本';
+    if (busy) {
+      closeExportMenu();
+      const controls = [...form.querySelectorAll('input, textarea, select, button'),
+        ...byId('result-section').querySelectorAll('button, textarea'),
+        byId('fill-example'), byId('clear-inputs')];
+      controls.forEach(control => {
+        disabledBeforeGeneration.set(control, control.disabled);
+        control.disabled = true;
+      });
+    } else {
+      disabledBeforeGeneration.forEach((disabled, control) => { control.disabled = disabled; });
+      disabledBeforeGeneration.clear();
+      updateCount();
+      byId('regenerate').disabled = !currentResult;
+    }
+  }
+
+  function resetFeedback() {
+    byId('generation-feedback').hidden = true;
+    byId('result-empty').hidden = !!currentResult;
+    byId('result-badge').textContent = currentResult ? '已保留 · 可编辑' : '等待生成';
+    byId('result-badge').classList.toggle('generated', !!currentResult);
+  }
+
+  function showFeedback(failed, simulated = false) {
+    const panel = byId('generation-feedback');
+    panel.hidden = false;
+    panel.classList.toggle('is-error', failed);
+    byId('generation-state-icon').textContent = failed ? '!' : '…';
+    byId('generation-state-title').textContent = failed ? (simulated ? '已触发模拟失败' : '本地生成未完成') : '正在模拟生成分镜';
+    byId('generation-state-description').textContent = failed
+      ? (simulated ? '这是主动触发的演示错误，没有调用 AI 或产生费用。' : '请重试；若仍失败，可刷新页面后再试。') + (currentResult ? '输入与上次脚本均已保留。' : '你的输入已保留，可以直接重试。')
+      : '短暂等待仅用于演示 Loading 状态；随后按表单与本地规则生成，不分析视频。';
+    byId('retry-generation').hidden = !failed;
+    byId('result-empty').hidden = true;
+    byId('result-badge').textContent = failed ? '生成失败' : '模拟生成中';
+    byId('result-badge').classList.remove('generated');
+  }
 
   function saveHistory() {
     clearTimeout(historyTimer);
@@ -253,12 +301,14 @@ if (typeof document !== 'undefined') {
     return true;
   }
   function updateCount() {
-    output.value = currentResult ? ScriptEngine.serialize(currentResult) : '';
-    byId('character-count').textContent = output.value.length.toLocaleString('zh-CN') + ' 字符';
-    copyButton.disabled = !output.value.trim() || isCopying;
-    exportButton.disabled = !currentResult;
-    documentButton.disabled = !currentResult;
-    exportToggle.disabled = !currentResult;
+    const text = currentResult ? ScriptEngine.serialize(currentResult) : '';
+    if (byId('manual-copy').hidden) output.value = text;
+    byId('character-count').textContent = text.length.toLocaleString('zh-CN') + ' 字符';
+    copyButton.disabled = !text.trim() || isCopying || isGenerating;
+    exportButton.disabled = !currentResult || isGenerating;
+    documentButton.disabled = !currentResult || isGenerating;
+    exportToggle.disabled = !currentResult || isGenerating;
+    document.querySelectorAll('.shot-copy-button').forEach(button => { button.disabled = isCopying || isGenerating; });
   }
   function fitCell(area) {
     area.style.height = 'auto';
@@ -290,6 +340,22 @@ if (typeof document !== 'undefined') {
         span.textContent = text;
         heading.append(span);
       }
+      const shotCopy = document.createElement('button');
+      shotCopy.type = 'button';
+      shotCopy.className = 'shot-copy-button';
+      shotCopy.textContent = '复制此镜';
+      shotCopy.setAttribute('aria-label', `复制镜头 ${shot.index}`);
+      const shotStatus = document.createElement('span');
+      shotStatus.className = 'shot-copy-status';
+      shotStatus.setAttribute('role', 'status');
+      shotCopy.addEventListener('click', async () => {
+        const text = `【镜头 ${String(shot.index).padStart(2, '0')}｜${ScriptEngine.clock(shot.start)}—${ScriptEngine.clock(shot.end)}｜${shot.duration} 秒｜${shot.phase}·${shot.purpose}】\n画面：${shot.visual}\n旁白／口播：${shot.voice}\n字幕：${shot.subtitle}\n剪辑说明：${shot.editing}`;
+        byId('shot-copy-label').textContent = `手动复制镜头 ${shot.index}`;
+        shotStatus.textContent = '';
+        const copied = await copyText(text, byId('shot-copy-output'), byId('manual-shot-copy'), `镜头 ${shot.index} 已复制。`);
+        shotStatus.textContent = copied ? '已复制' : '请手动复制';
+      });
+      heading.append(shotCopy, shotStatus);
       row.append(heading);
       for (const [key, label] of fields) {
         const cell = document.createElement('td');
@@ -306,6 +372,7 @@ if (typeof document !== 'undefined') {
           updateCount();
           byId('result-badge').textContent = '已手动编辑';
           byId('copy-status').textContent = '';
+          shotStatus.textContent = '';
           byId('export-status').textContent = '';
           clearTimeout(historyTimer);
           historyTimer = setTimeout(saveHistory, 450);
@@ -342,38 +409,65 @@ if (typeof document !== 'undefined') {
     }
   }
   function generate(regenerate = false) {
+    if (isGenerating || isCopying) return;
     const data = readForm();
     if (!checkForm(data)) return;
-    version = regenerate ? version + 1 : 0;
-    const result = ScriptEngine.generate(data, version);
+    const nextVersion = regenerate ? version + 1 : 0;
+    const simulateFailure = byId('simulate-failure').checked;
+    byId('simulate-failure').checked = false;
+    retryRegenerate = regenerate;
     if (historyTimer) saveHistory();
-    currentResult = result;
-    historyId = null;
-    saveHistory();
-    hasResult = true;
-    lastData = JSON.stringify(data);
-    byId('result-empty').hidden = true;
-    byId('result-content').hidden = false;
-    byId('manual-copy').hidden = true;
-    renderTable();
-    byId('result-badge').textContent = '已生成 · 可编辑';
-    byId('result-badge').classList.add('generated');
-    byId('regenerate').disabled = false;
-    byId('result-summary').textContent = `${result.shots.length} 镜 · ${data.contentType} · ${data.duration} 秒 · ${data.aspect}`;
     byId('copy-status').textContent = '';
     byId('export-status').textContent = '';
-    byId('form-status').textContent = regenerate ? '已保留全部需求并更新分镜，表格中的手动修改已被新结果替换。' : '分镜表格已生成，可直接编辑单元格，复制或导出。';
-    updateCount();
-    byId('table-scroll').focus({ preventScroll: true });
+    byId('manual-copy').hidden = true;
+    byId('manual-shot-copy').hidden = true;
+    showFeedback(false);
+    setGenerating(true);
+    byId('form-status').textContent = '正在演示生成过程，不调用 AI；请稍候。';
+    byId('generation-feedback').focus({ preventScroll: true });
     byId('result-section').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // 固定短等待仅展示交互状态，不冒充模型请求或视频分析。
+    generationTimer = setTimeout(() => {
+      generationTimer = null;
+      let result;
+      if (!simulateFailure) {
+        try { result = ScriptEngine.generate(data, nextVersion); } catch (_) { /* 下方保留旧结果并允许重试。 */ }
+      }
+      setGenerating(false);
+      if (!result) {
+        showFeedback(true, simulateFailure);
+        byId('form-status').textContent = '本次生成未完成，输入与已有脚本已保留。';
+        byId('retry-generation').focus({ preventScroll: true });
+        return;
+      }
+      version = nextVersion;
+      currentResult = result;
+      historyId = null;
+      saveHistory();
+      hasResult = true;
+      lastData = JSON.stringify(data);
+      byId('generation-feedback').hidden = true;
+      byId('result-content').hidden = false;
+      renderTable();
+      byId('result-badge').textContent = '模板生成 · 可编辑';
+      byId('result-badge').classList.add('generated');
+      byId('regenerate').disabled = false;
+      byId('result-summary').textContent = `${result.shots.length} 镜 · ${data.contentType} · ${data.duration} 秒 · ${data.aspect}`;
+      byId('form-status').textContent = regenerate ? '已保留全部需求并更新分镜，表格中的手动修改已被新结果替换。' : '本地模板生成完成。可编辑表格、复制单镜或整份脚本，也可导出。';
+      updateCount();
+      byId('table-scroll').focus({ preventScroll: true });
+    }, 800);
   }
   form.addEventListener('submit', event => { event.preventDefault(); generate(); });
   byId('regenerate').addEventListener('click', () => generate(true));
+  byId('retry-generation').addEventListener('click', () => generate(retryRegenerate));
   form.addEventListener('input', event => {
     if (['topic', 'duration'].includes(event.target.id)) clearFieldError(event.target.id);
     if (hasResult && JSON.stringify(readForm()) !== lastData) byId('form-status').textContent = '需求已修改，请重新生成以更新结果。';
   });
   function fillExample() {
+    if (isGenerating) return;
+    resetFeedback();
     const example = { topic: '通勤保温杯展示', 'content-type': '产品展示', platform: '小红书', duration: '30', aspect: '9:16', materials: '桌面杯身展示约12秒、开盖特写约5秒、倒水画面约8秒、拿起杯子喝水约5秒；没有口播。', references: '前3秒直接展示产品；镜头干净利落；白色简洁字幕；以直接切换为主；音乐轻快但不吵。', narration: '今天展示这只通勤保温杯。\n先看杯身外观。\n再看开盖和倒水过程。', additional: '不夸大保温性能，不编造价格，不使用花哨转场。' };
     for (const [id, value] of Object.entries(example)) byId(id).value = value;
     form.querySelectorAll('select').forEach(select => select.dispatchEvent(new Event('change', { bubbles: true })));
@@ -385,6 +479,8 @@ if (typeof document !== 'undefined') {
   byId('fill-example').addEventListener('click', fillExample);
   byId('empty-example').addEventListener('click', fillExample);
   byId('clear-inputs').addEventListener('click', () => {
+    if (isGenerating) return;
+    resetFeedback();
     ['topic', 'materials', 'narration', 'references', 'additional'].forEach(id => {
       byId(id).value = '';
     });
@@ -392,8 +488,8 @@ if (typeof document !== 'undefined') {
     byId('form-status').textContent = '文字输入已清空，选项与目标时长已保留。' + (hasResult ? '已有脚本仍保留；填写新需求后可重新生成。' : '请填写新主题后生成。');
     byId('topic').focus({ preventScroll: true });
   });
-  copyButton.addEventListener('click', async () => {
-    if (!output.value.trim() || isCopying) return;
+  async function copyText(text, area, container, message) {
+    if (!text.trim() || isCopying || isGenerating) return false;
     isCopying = true;
     updateCount();
     const status = byId('copy-status');
@@ -401,20 +497,25 @@ if (typeof document !== 'undefined') {
     status.classList.remove('error');
     let success = false;
     try {
-      if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(output.value); success = true; }
+      if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); success = true; }
     } catch (_) { /* 权限拒绝时进入兼容复制或手动选择。 */ }
     if (!success) {
-      byId('manual-copy').hidden = false;
-      output.focus();
-      output.select();
-      output.setSelectionRange(0, output.value.length);
+      container.hidden = false;
+      area.value = text;
+      area.focus();
+      area.select();
+      area.setSelectionRange(0, area.value.length);
       try { success = document.execCommand('copy'); } catch (_) { success = false; }
     }
-    status.textContent = success ? '分镜脚本已复制，可用于拍摄准备或交给剪辑工具。' : '自动复制不可用，已选中正文。请按 Ctrl+C（Mac 使用 ⌘C），手机可长按正文复制。';
+    status.textContent = success ? message : '自动复制不可用，已选中待复制文字。请按 Ctrl+C（Mac 使用 ⌘C），手机可长按文字复制。';
     status.classList.toggle('error', !success);
-    if (success) byId('manual-copy').hidden = true;
+    if (success) container.hidden = true;
     isCopying = false;
     updateCount();
+    return success;
+  }
+  copyButton.addEventListener('click', () => {
+    if (currentResult) copyText(ScriptEngine.serialize(currentResult), output, byId('manual-copy'), '整份分镜脚本已复制，包含当前编辑内容和统一要求。');
   });
   function closeExportMenu(focus = false) {
     exportMenu.hidden = true;
@@ -531,5 +632,9 @@ if (typeof document !== 'undefined') {
     clearVideo();
     videoError('无法播放此文件：文件可能损坏，或 MP4 内的视频编码不受浏览器支持。请尝试 H.264 编码的 MP4 文件。');
   });
-  window.addEventListener('pagehide', event => { if (historyTimer) saveHistory(); if (!event.persisted) { clearVideo(); downloadURLs.forEach(url => URL.revokeObjectURL(url)); downloadURLs.clear(); } });
+  window.addEventListener('pagehide', event => {
+    if (generationTimer !== null) { clearTimeout(generationTimer); generationTimer = null; setGenerating(false); resetFeedback(); }
+    if (historyTimer) saveHistory();
+    if (!event.persisted) { clearVideo(); downloadURLs.forEach(url => URL.revokeObjectURL(url)); downloadURLs.clear(); }
+  });
 }

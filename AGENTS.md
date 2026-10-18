@@ -4,7 +4,7 @@
 
 - 项目：爆款视频脚本AI。通过表单和本地规则生成中文分镜脚本，支持编辑、复制、导出 XLSX；不自动分析或剪辑视频。
 - 使用原生 HTML、CSS、JavaScript，无框架、第三方运行依赖或后端。源码直接位于根目录。
-- `index.html` 管页面，`style.css` 管视觉；`app.js` 包含 ScriptEngine 和业务交互；`xlsx-export.js` 管导出；`select-ui.js` 管菜单；`button-glow.js` 管光效。
+- `index.html` 管产品介绍首页，`workspace.html` 管独立工作台；首页不加载生成业务脚本。`style.css` 管组件视觉，`app-shell.css` 管页面骨架；`app.js` 包含 ScriptEngine 和业务交互；`xlsx-export.js` 管导出；`select-ui.js` 管菜单；`button-glow.js` 管光效。
 - `history.html` / `history.js` 管历史页面，`history-store.js` 用 localStorage 保存最近 20 份脚本；不保存视频，不跨浏览器同步。
 - `office-zip.js` 为 `xlsx-export.js` / `docx-export.js` 提供本地封装；导出入口包含 Excel 表格与 Word 文档。
 - 没有 `package.json`、TypeScript、Lint、构建流程、测试框架或 CI。不要虚构或直接运行不存在的 npm 脚本。

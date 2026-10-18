@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080808"><meta name="description" content="爆款视频脚本AI登录表单演示，不进行真实认证，不保存账号或密码。">
+<title>登录 · 爆款视频脚本AI</title>
+<link rel="stylesheet" href="style.css?v=responsive-1"><link rel="stylesheet" href="auth.css?v=responsive-1">
+<script src="auth.js?v=1" defer></script><script src="site-nav.js?v=3" defer></script><script src="button-glow.js?v=performance-2" defer></script>
+</head>
+<body class="home-refined auth-page">
+<a class="skip-link" href="#auth-main">跳到登录表单</a>
+<header class="site-header"><nav class="nav shell" aria-label="主导航">
+<a class="logo" href="index.html#home"><span class="logo-mark" aria-hidden="true">✳</span>爆款视频脚本AI<span class="demo-badge">演示版</span></a>
+<div class="nav-links"><a href="index.html#home">首页</a><a href="login.html" aria-current="page">登录</a><a class="nav-cta" href="register.html">前往注册 <span aria-hidden="true">↗</span></a></div>
+</nav></header>
+<main class="auth-main shell" id="auth-main">
+<section class="auth-intro" aria-labelledby="intro-title"><span class="section-kicker">从灵感，到清晰的分镜</span><h1 id="intro-title">让每一个想法，<span>都有好脚本。</span></h1><p>用自己的素材，参考喜欢的节奏。把画面、旁白和字幕整理成一份可以直接使用的分镜脚本。</p><ul class="auth-benefits"><li><span aria-hidden="true">01</span><div><strong>写清每一镜</strong><p>时间、画面和文案，放在同一张表里。</p></div></li><li><span aria-hidden="true">02</span><div><strong>把脚本带走</strong><p>编辑、复制，或导出 Excel / Word。</p></div></li></ul><a class="auth-text-link" href="workspace.html">无需登录，直接体验工作台 <span aria-hidden="true">↗</span></a></section>
+<section class="card auth-card" aria-labelledby="auth-title"><span class="auth-demo-label"><span class="tiny-dot" aria-hidden="true"></span> 前端表单演示</span><h2 id="auth-title">欢迎回来</h2><p class="auth-subtitle">使用测试信息，体验登录表单。</p>
+<div class="auth-notice" id="auth-demo-notice"><strong>当前不提供真实登录</strong><p>不会验证账号、保存邮箱或密码，也不会建立登录状态。请勿输入真实密码。</p></div>
+<form id="auth-form" data-mode="login" novalidate autocomplete="off" aria-describedby="auth-demo-notice">
+<fieldset id="auth-fields" disabled><legend class="visually-hidden">登录信息</legend>
+<div class="auth-field"><label for="auth-email">邮箱 <span aria-hidden="true">*</span></label><input type="email" id="auth-email" inputmode="email" autocomplete="off" spellcheck="false" autocapitalize="none" required maxlength="254" placeholder="例如：demo@example.com" aria-describedby="auth-email-error"><p class="field-error" id="auth-email-error" hidden></p></div>
+<div class="auth-field"><label for="auth-password">密码 <span aria-hidden="true">*</span></label><div class="auth-password-control"><input type="password" id="auth-password" autocomplete="off" required minlength="8" maxlength="128" placeholder="请输入测试密码" aria-describedby="auth-password-help auth-password-error"><button type="button" class="auth-password-toggle" data-password-target="auth-password" aria-controls="auth-password" aria-label="显示密码" aria-pressed="false">显示</button></div><p class="auth-field-help" id="auth-password-help">8—128 个字符，仅用于本次表单演示。</p><p class="field-error" id="auth-password-error" hidden></p></div>
+<div class="auth-form-links"><button class="auth-text-link auth-help-toggle" type="button" id="forgot-password" aria-expanded="false" aria-controls="password-help">忘记密码？</button></div>
+<div class="auth-help" id="password-help" hidden><strong>密码找回尚未接入</strong><p>演示版没有真实账号，也不会发送重置邮件。使用格式正确的测试邮箱和测试密码即可体验，无需注册。</p></div>
+<button class="button primary auth-submit" type="submit">登录（演示）<span aria-hidden="true">→</span></button>
+</fieldset><p id="auth-status" class="auth-status" role="status" aria-live="polite"></p>
+</form>
+<section class="auth-success" id="auth-success" aria-labelledby="auth-success-title" hidden><span class="auth-success-mark" aria-hidden="true">✓</span><h3 id="auth-success-title">登录表单校验通过（演示）</h3><p>仅完成前端格式校验，尚未验证身份，也未建立登录状态。密码已清空；工作台本身无需登录即可使用。</p><a class="button secondary" href="workspace.html">体验工作台（无需登录）<span aria-hidden="true">↗</span></a><a class="auth-text-link" href="account.html">查看模拟用户中心 <span aria-hidden="true">↗</span></a></section>
+<p class="auth-switch">还没有账号？<a href="register.html">前往注册演示 <span aria-hidden="true">→</span></a></p>
+<noscript><p class="auth-help">请启用 JavaScript 后体验表单；当前输入已禁用，避免提交到服务器。</p></noscript>
+</section>
+</main>
+<footer class="auth-footer shell"><span>爆款视频脚本AI · 前端演示</span><a href="index.html#home">返回首页</a></footer>
+</body>
+</html>

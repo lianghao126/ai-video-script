@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080808"><meta name="description" content="爆款视频脚本AI用户中心前端演示：用户资料、积分、套餐和生成次数均为固定模拟数据，不接真实认证或数据库。">
+<title>用户中心 · 爆款视频脚本AI</title>
+<link rel="stylesheet" href="style.css?v=responsive-1"><link rel="stylesheet" href="account.css?v=1">
+<script src="site-nav.js?v=3" defer></script><script src="button-glow.js?v=performance-2" defer></script>
+</head>
+<body class="home-refined account-page">
+<a class="skip-link" href="#account-main">跳到用户中心</a>
+<header class="site-header"><nav class="nav shell" aria-label="主导航"><a class="logo" href="index.html#home"><span class="logo-mark" aria-hidden="true">✳</span>爆款视频脚本AI<span class="demo-badge">演示版</span></a><div class="nav-links"><a href="index.html#home">产品首页</a><a href="workspace.html">工作台</a><a href="account.html" aria-current="page">用户中心</a></div></nav></header>
+<main class="account-main shell" id="account-main">
+<div class="account-heading"><div><span class="section-kicker">个人空间</span><h1>用户中心</h1><p>在这里查看资料、套餐与使用概况。</p></div><span class="account-demo-tag"><span class="tiny-dot" aria-hidden="true"></span> 模拟用户数据</span></div>
+<div class="account-notice"><strong>当前为前端演示，尚未登录真实账户。</strong><p>昵称、邮箱、积分、套餐与生成次数均为固定示例，不代表真实账户或购买权益。不会请求认证接口、保存账户资料或扣除积分。</p></div>
+
+<section class="card account-card account-profile" aria-labelledby="profile-name">
+<div class="account-avatar" role="img" aria-label="模拟用户的默认头像"><svg viewBox="0 0 48 48" width="48" height="48" fill="none" aria-hidden="true"><circle cx="24" cy="17" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 40c0-8 6-13 14-13s14 5 14 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+<div class="account-identity"><p class="account-caption">昵称 <span>模拟</span></p><h2 id="profile-name">灵感创作者</h2><p class="account-email"><span>邮箱（模拟）</span><span id="profile-email">demo@example.com</span></p></div>
+<div class="account-profile-actions"><a class="button primary" href="workspace.html">去工作台 <span aria-hidden="true">↗</span></a><a class="account-text-link" href="#account-actions">账户操作 <span aria-hidden="true">↓</span></a></div>
+</section>
+
+<section class="account-stats" aria-labelledby="stats-title"><h2 class="visually-hidden" id="stats-title">账户使用概况，以下均为模拟数据</h2>
+<article class="card account-card account-stat"><div class="account-stat-label"><h3>当前积分</h3><span class="account-mini-tag">模拟</span></div><p class="account-stat-value"><strong id="account-points">120</strong><span>积分</span></p><p class="account-stat-help">仅展示示例余额，不可充值或消费；生成脚本不会扣除。</p></article>
+<article class="card account-card account-stat"><div class="account-stat-label"><h3>当前套餐</h3><span class="account-mini-tag">模拟</span></div><p class="account-stat-value account-plan-value"><strong id="account-plan">免费演示版</strong></p><p class="account-stat-help">用于展示套餐信息，未开通真实订阅或付费权益。</p></article>
+<article class="card account-card account-stat"><div class="account-stat-label"><h3>本月生成次数</h3><span class="account-mini-tag">模拟</span></div><p class="account-stat-value"><strong id="account-usage">12</strong><span>次</span></p><p class="account-stat-help">固定演示值，不读取本机历史，也不随实际生成次数变化。</p></article>
+</section>
+
+<div class="account-bottom-grid">
+<section class="card account-card account-plan-card" aria-labelledby="plan-title"><span class="section-kicker">套餐与使用</span><h2 id="plan-title">先体验，再决定下一步</h2><p>当前工作台可直接体验本地模板生成，不需要登录或购买积分。</p><ul class="account-features"><li>根据需求生成、编辑中文分镜脚本</li><li>复制单镜或整份脚本</li><li>导出 Excel 表格与 Word 文档</li></ul><a class="button primary" id="upgrade-plan" href="pricing.html">查看升级套餐 <span aria-hidden="true">↗</span></a><p class="account-fine-print">查看免费版、基础版与专业版的教学演示。价格及权益均为示例，本入口不发起订阅、支付或权益变更。</p></section>
+<section class="card account-card account-actions" id="account-actions" aria-labelledby="actions-title"><span class="section-kicker">账户操作</span><h2 id="actions-title">了解账户演示</h2><p>当前没有真实账户和登录状态。可以查看已完成的登录、注册表单演示。</p><div class="account-action-links"><a class="button secondary" href="login.html">登录演示 <span aria-hidden="true">↗</span></a><a class="button secondary" href="register.html">注册演示 <span aria-hidden="true">↗</span></a></div><details class="account-privacy"><summary>账户与数据说明</summary><div><p>本页使用固定的模拟资料，不支持修改邮箱或密码；登录表单中输入的测试邮箱也不会与本页关联。</p><p>本机历史记录独立保存在当前浏览器，不属于此模拟账号，也不会上传到数据库。</p><a class="account-text-link" href="history.html">查看历史记录 <span aria-hidden="true">↗</span></a></div></details></section>
+</div>
+</main>
+<footer class="account-footer shell"><span>爆款视频脚本AI · 前端演示</span><nav aria-label="页脚导航"><a href="pricing.html">套餐预览</a><a href="history.html">历史记录</a><a href="workspace.html">工作台</a></nav></footer>
+</body>
+</html>

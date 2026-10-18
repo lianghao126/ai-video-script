@@ -32,7 +32,12 @@
 
 ```text
 D:\xiaohonshu\
-├── index.html        页面结构、导航、Hero、视频区、表单、结果表格、使用说明
+├── index.html        产品介绍首页、Hero、功能介绍、示例与工作台入口
+├── workspace.html    独立工作台：视频区、表单、结果表格
+├── app-shell.css     首页手机导航与工作台页面骨架
+├── site-nav.js       首页可展开导航的键盘与点击交互
+├── landing.js        旧工作台地址重定向兼容
+├── workspace-entry.js 跨页示例填充，复用原有按钮逻辑
 ├── style.css         全站样式、玻璃材质、菜单与光效、桌面和手机布局
 ├── app.js            ScriptEngine 规则引擎、表单校验、预览、结果编辑、复制和下载交互
 ├── xlsx-export.js    XLSX 文件生成、表格排版、长文本续行
@@ -48,7 +53,7 @@ D:\xiaohonshu\
 └── .git\             Git 历史和配置，由 Git 管理，不手工修改
 ```
 
-脚本由 `index.html` 使用 `defer` 按顺序加载：`office-zip.js` → `xlsx-export.js` → `docx-export.js` → `history-store.js` → `app.js` → `select-ui.js` → `button-glow.js`。历史页加载 `history-store.js`、`history.js` 和 `button-glow.js`。保留依赖顺序；样式和脚本引用中的查询参数用于区分资源版本。
+首页仅加载 `landing.js`、`site-nav.js`、`button-glow.js`。生成相关脚本由 `workspace.html` 使用 `defer` 按顺序加载：`office-zip.js` → `xlsx-export.js` → `docx-export.js` → `history-store.js` → `app.js` → `select-ui.js` → `workspace-entry.js` → `history-demo.js` → `history-refill.js` → `button-glow.js`。历史页加载 `history-store.js`、`history-demo.js`、`history.js` 和 `button-glow.js`。保留依赖顺序；样式和脚本引用中的查询参数用于区分资源版本。
 
 生成规则集中在 `app.js` 的 `ScriptEngine`：`validate` 校验输入，`timing` 分配时间，`generate` 组织分镜，`serialize` 输出完整文字。浏览器交互在同一文件后半部分。该引擎也通过 `module.exports` 暴露，可由 Node.js 直接检查。
 
